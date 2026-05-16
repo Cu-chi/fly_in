@@ -1,4 +1,4 @@
-from map import Map
+from fly_in.map import Map
 from typing import Any
 
 
@@ -15,10 +15,10 @@ class MapParser():
         self.nb_drones: int | None = None
         self.lc: int = 0
 
-    def __enter__(self):
+    def __enter__(self) -> 'MapParser':
         self.file = open(self.filename, "r")
         self._parser()
-        return
+        return self
 
     def readline(self):
         self.lc += 1
@@ -46,6 +46,8 @@ class MapParser():
                                       "number of drones using "
                                       "'nb_drones: <positive_integer>'")
             line = self.readline()
+        if self.nb_drones is None:
+            raise MapParsingError(self.lc, "missing configuration in file")
 
     def validate_nb_drones(self, node_params: list[str]):
         if len(node_params) != 1:

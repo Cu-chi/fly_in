@@ -1,5 +1,5 @@
-from map import Map
-from map_parser import MapParser, MapParsingError
+from fly_in.map import Map
+from fly_in.map_parser import MapParser, MapParsingError
 
 
 def main() -> None:
