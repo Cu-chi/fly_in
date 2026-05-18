@@ -19,11 +19,26 @@ class Color(Enum):
 
 
 @dataclass
+class Metadata:
+    zone: Zone
+    color: Color
+    max_link_capacity: int
+    max_drones: int
+
+
+@dataclass
 class Node:
     name: str
     x: int
     y: int
-    zone: Zone
+    metadata: Metadata
+
+
+@dataclass
+class Connection:
+    name1: Node
+    name2: Node
+    metadata: Metadata
 
 
 class Map():
