@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import Any
+from typing import Optional
 from enum import Enum, auto
 
 
@@ -9,6 +9,20 @@ class Zone(Enum):
     PRIORITY = auto()
     BLOCKED = auto()
 
+    @staticmethod
+    def get_zone(zone_str: str) -> Optional['Zone']:
+        match zone_str:
+            case "normal":
+                return Zone.NORMAL
+            case "restricted":
+                return Zone.RESTRICTED
+            case "priority":
+                return Zone.PRIORITY
+            case "blocked":
+                return Zone.BLOCKED
+            case _:
+                return None
+
 
 class Color(Enum):
     RED = auto()
@@ -17,13 +31,29 @@ class Color(Enum):
     YELLOW = auto()
     PINK = auto()
 
+    @staticmethod
+    def get_color(color_str: str) -> Optional['Color']:
+        match color_str:
+            case "red":
+                return Color.RED
+            case "green":
+                return Color.GREEN
+            case "blue":
+                return Color.BLUE
+            case "yellow":
+                return Color.YELLOW
+            case "pink":
+                return Color.PINK
+            case _:
+                return None
+
 
 @dataclass
 class Metadata:
-    zone: Zone
-    color: Color
-    max_link_capacity: int
-    max_drones: int
+    zone: Optional[Zone]
+    color: Optional[Color]
+    max_link_capacity: Optional[int]
+    max_drones: Optional[int]
 
 
 @dataclass
