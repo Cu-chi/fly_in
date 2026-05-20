@@ -1,4 +1,4 @@
-from fly_in.map import Node, Metadata, Color, Zone, Connection
+from fly_in.map_types import Node, Metadata, Color, Zone, Connection
 from typing import Any
 from types import TracebackType
 

@@ -78,13 +78,3 @@ class Connection:
 
     def __hash__(self) -> int:
         return hash(frozenset([self.node1, self.node2]))
-
-
-class Map():
-    def __init__(self,
-                 start_hub: Node,
-                 end_hud: Node,
-                 hubs: tuple[Node]):
-        self.start_hub: Node = start_hub
-        self.end_hud: Node = end_hud
-        self.hubs: tuple[Node] = hubs
