@@ -206,8 +206,10 @@ class MapParser():
             y: int = int(node_params[2])
         except ValueError:
             raise MapParsingError(id, "x and y must be integers")
-        if not name.isalnum():
-            raise MapParsingError(id, "hub name must be alpha-numerical")
+        if "-" in name:
+            raise MapParsingError(id, "'-' in hub name is forbidden")
+        if not name.isprintable():
+            raise MapParsingError(id, "hub name must be printable")
         if self._get_node_from_name(name):
             raise MapParsingError(id, f"name '{name}' is taken")
         if self._are_coords_taken(x, y):
