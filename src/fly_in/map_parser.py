@@ -42,10 +42,6 @@ class MapParser():
         return line[:opening], line[opening + 1:closing].strip()
 
     def _is_name_taken(self, name: str) -> bool:
-        if self.start_hub and self.start_hub.name == name:
-            return True
-        if self.end_hub and self.end_hub.name == name:
-            return True
         for hub in self.hubs:
             if hub.name == name:
                 return True
@@ -182,10 +178,12 @@ class MapParser():
             self.start_hub = Node(name,
                                   x, y,
                                   self._parse_metadata(id, metadata_str))
+            self.hubs.append(self.start_hub)
         elif hub_type == "end_hub":
             self.end_hub = Node(name,
                                 x, y,
                                 self._parse_metadata(id, metadata_str))
+            self.hubs.append(self.end_hub)
         else:
             self.hubs.append(Node(name,
                              x, y,
