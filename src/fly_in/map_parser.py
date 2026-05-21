@@ -187,7 +187,7 @@ class MapParser():
         if self.nb_drones is None:
             try:
                 self.nb_drones = int(node_params[0])
-                if self.nb_drones < 0:
+                if self.nb_drones <= 0:
                     raise Exception
             except Exception:
                 raise MapParsingError(id, "nb_drones must be "
