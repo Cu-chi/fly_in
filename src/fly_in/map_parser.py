@@ -163,6 +163,9 @@ class MapParser():
                                       node_params, metadata_str)
                 case "connection":
                     self.validate_connection(id, node_params, metadata_str)
+                case unknown_key:
+                    raise MapParsingError(id, f"key '{unknown_key}' is not"
+                                          "supported")
             if first_line and node_type != "nb_drones":
                 raise MapParsingError(id, " first line must define the "
                                       "number of drones using "
