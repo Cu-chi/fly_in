@@ -149,7 +149,7 @@ class MapParser():
                                       "format: 'key: data'")
             line, metadata_str = self._extract_metadata_str(id, line)
             node_type, node_data = line.split(":")
-            node_params: list[str] = node_data.strip().split(" ")
+            node_params: list[str] = node_data.strip().split()
             match node_type:
                 case "nb_drones":
                     self.validate_nb_drones(id, node_params, metadata_str)
