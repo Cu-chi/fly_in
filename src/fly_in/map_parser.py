@@ -25,7 +25,7 @@ class MapParser():
         return self
 
     @staticmethod
-    def _extract_metadata_str(line: str) -> tuple[str, str]:
+    def _extract_metadata_str(id: int, line: str) -> tuple[str, str]:
         """Extract metadata from the line and return
         line without metadata and metadata without brackets
 
@@ -37,10 +37,13 @@ class MapParser():
             second is only the metadata without brackets
         """
         opening = line.find("[")
-        closing = line.find("]")
-        if opening == -1 or closing == -1:
+        if opening == -1:
             return line, ""
-        return line[:opening], line[opening + 1:closing].strip()
+        metadata_str: str = line[opening:].strip()
+
+        if metadata_str[-1] != "]":
+            raise MapParsingError(id, "metadata must be the last argument")
+        return line[:opening], metadata_str[1:-1]
 
     def _get_node_from_name(self, name: str) -> Node | None:
         for hub in self.hubs:
@@ -144,7 +147,7 @@ class MapParser():
             if line.count(":") != 1:
                 raise MapParsingError(id, "line doesn't respect the "
                                       "format: 'key: data'")
-            line, metadata_str = self._extract_metadata_str(line)
+            line, metadata_str = self._extract_metadata_str(id, line)
             node_type, node_data = line.split(":")
             node_params: list[str] = node_data.strip().split(" ")
             match node_type:
