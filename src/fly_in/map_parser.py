@@ -1,4 +1,4 @@
-from fly_in.map_types import Node, Metadata, Color, Zone, Connection
+from fly_in.map_types import Node, Metadata, Zone, Connection
 from typing import Any
 from types import TracebackType
 
@@ -68,7 +68,7 @@ class MapParser():
         split = metadata_str.split(" ")
         key: str
         value: str
-        color: Color | None = None
+        color: str | None = None
         max_link_capacity: int | None = None
         max_drones: int | None = None
         zone: Zone | None = None
@@ -95,11 +95,10 @@ class MapParser():
                                       "set")
             match key:
                 case "color":
-                    color = Color.get_color(value.lower())
-                    if not color:
+                    color = value
+                    if not value.isprintable():
                         raise MapParsingError(id, f"color '{value}' is not "
-                                              "valid, must "
-                                              f"be in {Color._member_names_}")
+                                              "valid, must be printable")
                 case "max_link_capacity":
                     try:
                         max_link_capacity = int(value)

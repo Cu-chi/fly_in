@@ -24,34 +24,10 @@ class Zone(Enum):
                 return None
 
 
-class Color(Enum):
-    RED = auto()
-    GREEN = auto()
-    BLUE = auto()
-    YELLOW = auto()
-    PINK = auto()
-
-    @staticmethod
-    def get_color(color_str: str) -> Optional['Color']:
-        match color_str:
-            case "red":
-                return Color.RED
-            case "green":
-                return Color.GREEN
-            case "blue":
-                return Color.BLUE
-            case "yellow":
-                return Color.YELLOW
-            case "pink":
-                return Color.PINK
-            case _:
-                return None
-
-
 @dataclass(frozen=True)
 class Metadata:
     zone: Optional[Zone]
-    color: Optional[Color]
+    color: Optional[str]
     max_link_capacity: Optional[int]
     max_drones: Optional[int]
 
