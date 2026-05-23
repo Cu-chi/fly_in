@@ -1,4 +1,4 @@
-from fly_in.map_types import Node, Metadata, Zone, Connection
+from fly_in.map_types import Node, Metadata, Zone, Connection, Map
 from typing import Any
 from types import TracebackType
 
@@ -19,10 +19,14 @@ class MapParser():
         self.hubs: list[Node] = []
         self.connections: set[Connection] = set()
 
-    def __enter__(self) -> 'MapParser':
+    def __enter__(self) -> Map:
         self.file = open(self.filename, "r")
         self._parser()
-        return self
+        if self.nb_drones and self.start_hub and \
+           self.end_hub and self.hubs and self.connections:
+            return Map(self.nb_drones, self.start_hub,
+                       self.end_hub, self.hubs, self.connections)
+        raise MapParsingError(0, f"error parsing {self.filename}")
 
     @staticmethod
     def _extract_metadata_str(id: int, line: str) -> tuple[str, str]:

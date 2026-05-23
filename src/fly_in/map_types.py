@@ -54,3 +54,12 @@ class Connection:
 
     def __hash__(self) -> int:
         return hash(frozenset([self.node1, self.node2]))
+
+
+@dataclass
+class Map:
+    nb_drones: int
+    start_hub: Node
+    end_hub: Node
+    hubs: list[Node]
+    connections: set[Connection]
