@@ -5,13 +5,13 @@ from fly_in.output import Output
 
 
 def main() -> None:
-    with MapParser("maps/test.txt") as map:
+    with MapParser("maps/challenger/01_the_impossible_dream.txt") as map:
         path_finder = PathFinder(map)
         path_finder.route_all_drones()
         output = Output(path_finder.drones_paths)
         drones_positions = output.generate_list_of_positions()
         output.from_positions_print_turns(drones_positions)
-        visualizer = Visualizer(map.hubs, map.connections)
+        visualizer = Visualizer(map, drones_positions)
         visualizer.run()
 
 

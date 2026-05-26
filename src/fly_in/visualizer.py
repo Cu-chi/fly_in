@@ -1,5 +1,6 @@
 import pygame
 import pygame.gfxdraw
+from fly_in.map_parser import Map
 from fly_in.map_types import Node, Connection
 from typing import Any
 
@@ -11,7 +12,7 @@ class VNode(pygame.sprite.Sprite):
         super().__init__(*groups)
 
         self.node = node
-        self.radius = 16
+        self.radius = 64
 
         try:
             if node.metadata.color:
@@ -42,8 +43,7 @@ class VNode(pygame.sprite.Sprite):
         screen.blit(self.text_surface, self.text_rect)
 
     def update(self, x: int, y: int) -> None:
-        self.rect.x = x
-        self.rect.y = y
+        self.rect.center = (x, y)
         self.text_rect.centerx = self.rect.centerx
         self.text_rect.bottom = self.rect.top
 
@@ -78,9 +78,26 @@ class VConnection(pygame.sprite.Sprite):
         surface.blit(self.text_surface, self.text_rect)
 
 
+class VDrone(pygame.sprite.Sprite):
+    def __init__(self, position: Node | Connection,
+                 screen_x: int, screen_y: int, *groups: Any):
+        super().__init__(*groups)
+
+        self.image = pygame.image.load("src/fly_in/assets/drone.png")
+        self.image = pygame.transform.scale(self.image, (64, 64))
+        self.rect = self.image.get_rect(center=(screen_x, screen_y))
+        self.position = position
+
+    def draw(self, screen: pygame.Surface) -> None:
+        screen.blit(self.image, self.rect)
+
+    def update(self, x: int, y: int) -> None:
+        self.rect.center = (x, y)
+
+
 class Visualizer():
-    def __init__(self, hubs: list[Node],
-                 connections: set[Connection]) -> None:
+    def __init__(self, map: Map,
+                 drones_positions: list[dict[int, Node | Connection]]) -> None:
         pygame.init()
         self.scale = 1.0
         video_info: pygame.display._VidInfo = pygame.display.Info()
@@ -94,20 +111,32 @@ class Visualizer():
         self.vnodes: dict[str, VNode] = {}
         self.offset_x = 0
         self.offset_y = 0
-        for hub in hubs:
+        for hub in map.hubs:
             x, y = self._normalize_pos(hub)
             self.vnodes.update({hub.name: VNode(hub, x, y, self.font)})
-        self.vconnections: list[VConnection] = []
-        for connection in connections:
-            self.vconnections.append(VConnection(connection, self.font_small))
+        self.vconnections: list[VConnection] = [
+            VConnection(connection, self.font_small)
+            for connection in map.connections
+        ]
 
-        self.hubs = hubs
-        self.connections = connections
+        self.vdrones: list[VDrone] = [
+            VDrone(map.start_hub, *self._normalize_pos(map.start_hub))
+            for _ in range(map.nb_drones)
+        ]
+        self.hubs = map.hubs
+        self.connections = map.connections
+        self.drones_positions = drones_positions
         self.running = True
 
+        self.NEXT_TURN_EVENT = pygame.USEREVENT + 1
+        pygame.time.set_timer(self.NEXT_TURN_EVENT,
+                              500,
+                              len(self.drones_positions) - 1)
+        self.turn = 0
+
     def _normalize_pos(self, node: Node) -> tuple[int, int]:
-        return (int((node.x) * 80 * self.scale) + self.offset_x,
-                int((node.y) * 80 * self.scale) + self.offset_y)
+        return (int((node.x) * 240 * self.scale) + self.offset_x,
+                int((node.y) * 240 * self.scale) + self.offset_y)
 
     def run(self) -> None:
         mousedown = False
@@ -126,6 +155,8 @@ class Visualizer():
                 if event.type == pygame.MOUSEMOTION and mousedown:
                     self.offset_x += event.rel[0]
                     self.offset_y += event.rel[1]
+                if event.type == self.NEXT_TURN_EVENT:
+                    self.turn += 1
 
             self.screen.fill("gray")
 
@@ -140,6 +171,19 @@ class Visualizer():
                 x, y = self._normalize_pos(vnode.node)
                 vnode.update(x, y)
                 vnode.draw(self.screen)
+
+            for drone_id, vdrone in enumerate(self.vdrones, start=1):
+                positions = self.drones_positions[self.turn]
+                if drone_id in positions:
+                    vdrone.position = positions[drone_id]
+                if isinstance(vdrone.position, Node):
+                    x, y = self._normalize_pos(vdrone.position)
+                elif isinstance(vdrone.position, Connection):
+                    x1, y1 = self._normalize_pos(vdrone.position.node1)
+                    x2, y2 = self._normalize_pos(vdrone.position.node2)
+                    x, y = x1 - x2, y1 - y2
+                vdrone.update(x, y)
+                vdrone.draw(self.screen)
 
             pygame.display.flip()
             self.clock.tick(60)
