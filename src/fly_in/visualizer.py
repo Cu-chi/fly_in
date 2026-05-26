@@ -176,7 +176,7 @@ class Visualizer():
                     self.running = False
                 if event.type == pygame.MOUSEWHEEL:
                     scale_factor: int = event.y * 0.1
-                    if 0 < self.scale + scale_factor < 100:
+                    if 0.1 < self.scale + scale_factor < 3.0:
                         self.scale += scale_factor
                 if event.type == pygame.MOUSEBUTTONDOWN:
                     mousedown = True
