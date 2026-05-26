@@ -181,7 +181,7 @@ class Visualizer():
                 elif isinstance(vdrone.position, Connection):
                     x1, y1 = self._normalize_pos(vdrone.position.node1)
                     x2, y2 = self._normalize_pos(vdrone.position.node2)
-                    x, y = x1 - x2, y1 - y2
+                    x, y = (x1 + x2) // 2, (y1 + y2) // 2
                 vdrone.update(x, y)
                 vdrone.draw(self.screen)
 
