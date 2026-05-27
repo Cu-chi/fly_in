@@ -54,6 +54,7 @@ class PathFinder:
         self.state = SimulationState(map_data.start_hub, map_data.end_hub,
                                      map_data.nb_drones)
         self.drones_paths: dict[int, Path] = {}
+        self.true_dist = self._compute_true_distances()
 
     def route_all_drones(self) -> None:
         for drone_id in range(1, self.map.nb_drones + 1):
@@ -66,6 +67,39 @@ class PathFinder:
             else:
                 print("no path for ", drone_id)
 
+    def _compute_true_distances(self) -> dict[Node, int]:
+        distances: dict[Node, int] = {node: -1
+                                      for node in self.map.hubs}
+        distances[self.map.end_hub] = 0
+
+        counter = itertools.count()
+        queue = [(0, next(counter), self.map.end_hub)]
+
+        while queue:
+            dist, _, current = heapq.heappop(queue)
+
+            if dist > distances[current] or distances[current] == -1:
+                continue
+
+            for conn in self.map.connections:
+                neighbor = None
+                if conn.node1 == current:
+                    neighbor = conn.node2
+                elif conn.node2 == current:
+                    neighbor = conn.node1
+
+                if neighbor:
+                    if neighbor.metadata.zone == Zone.BLOCKED:
+                        continue
+
+                    new_dist = dist + 1
+                    if distances[neighbor] == -1 or \
+                       new_dist < distances[neighbor]:
+                        distances[neighbor] = new_dist
+                        heapq.heappush(queue,
+                                       (new_dist, next(counter), neighbor))
+        return distances
+
     def _reserve_path(self, drone_id: int,
                       path: Path) -> None:
         for location, time in path:
@@ -75,8 +109,7 @@ class PathFinder:
                 self.state.reserve_connection(location, time, drone_id)
 
     def _heuristic(self, node: Node) -> int:
-        return (abs(node.x - self.map.end_hub.x)
-                + abs(node.y - self.map.end_hub.y))
+        return self.true_dist[node]
 
     def find_path(self) -> Path:
         counter: itertools.count[int] = itertools.count()
