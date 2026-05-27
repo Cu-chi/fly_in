@@ -9,6 +9,11 @@ PathStep: TypeAlias = tuple[Node | Connection, int]
 Path: TypeAlias = list[PathStep]
 
 
+class PathError(Exception):
+    def __init__(self, *args):
+        super().__init__(*args)
+
+
 class SimulationState:
     def __init__(self, start_hub: Node, end_hub: Node, nb_drones: int) -> None:
         self.start_hub = start_hub
@@ -55,6 +60,8 @@ class PathFinder:
                                      map_data.nb_drones)
         self.drones_paths: dict[int, Path] = {}
         self.true_dist = self._compute_true_distances()
+        if self.true_dist[self.map.start_hub] == -1:
+            raise PathError("map is not solvable")
 
     def route_all_drones(self) -> None:
         for drone_id in range(1, self.map.nb_drones + 1):
