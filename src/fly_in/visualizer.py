@@ -129,7 +129,6 @@ class Visualizer():
     def __init__(self, map: Map,
                  drones_positions: list[dict[int, Node | Connection]]) -> None:
         pygame.init()
-        self.scale = 1.0
         video_info: pygame.display._VidInfo = pygame.display.Info()
         pygame.display.set_caption("fly-in visualizer")
         self.screen = pygame.display.set_mode(
@@ -138,35 +137,76 @@ class Visualizer():
         self.clock = pygame.time.Clock()
         self.font = pygame.font.SysFont("Arial", 16)
         self.font_small = pygame.font.SysFont("Arial", 10)
+
         self.vnodes: dict[str, VNode] = {}
+        self.hubs = map.hubs
+        self.connections = map.connections
+        self.drones_positions = drones_positions
+        self.norm_val = 240
+        self.scale = 1.0
         self.offset_x = 0
         self.offset_y = 0
+        self._center_and_fit_map()
+
         for hub in map.hubs:
             x, y = self._normalize_pos(hub)
             self.vnodes.update({hub.name: VNode(hub, x, y, self.font)})
+
         self.vconnections: list[VConnection] = [
             VConnection(connection, self.font_small)
             for connection in map.connections
         ]
-
         self.vdrones: list[VDrone] = [
             VDrone(map.start_hub, *self._normalize_pos(map.start_hub))
             for _ in range(map.nb_drones)
         ]
-        self.hubs = map.hubs
-        self.connections = map.connections
-        self.drones_positions = drones_positions
-        self.running = True
 
         self.NEXT_TURN_EVENT = pygame.USEREVENT + 1
         pygame.time.set_timer(self.NEXT_TURN_EVENT,
                               500,
                               len(self.drones_positions) - 1)
+
         self.turn = 0
+        self.running = True
 
     def _normalize_pos(self, node: Node) -> tuple[int, int]:
-        return (int((node.x) * 240 * self.scale) + self.offset_x,
-                int((node.y) * 240 * self.scale) + self.offset_y)
+        return (int((node.x) * self.norm_val * self.scale) + self.offset_x,
+                int((node.y) * self.norm_val * self.scale) + self.offset_y)
+
+    def _center_and_fit_map(self) -> None:
+        if not self.hubs:
+            return
+
+        min_x = min(hub.x for hub in self.hubs)
+        max_x = max(hub.x for hub in self.hubs)
+        min_y = min(hub.y for hub in self.hubs)
+        max_y = max(hub.y for hub in self.hubs)
+
+        map_width = max_x - min_x
+        map_height = max_y - min_y
+
+        center_x = (min_x + max_x) / 2.0
+        center_y = (min_y + max_y) / 2.0
+
+        screen_w, screen_h = self.screen.get_size()
+        padding = 100
+
+        width_scale = (screen_w - padding) / (map_width * self.norm_val) \
+            if map_width > 0 else 1.0
+        height_scale = (screen_h - padding) / (map_height * self.norm_val) \
+            if map_height > 0 else 1.0
+
+        self.scale = min(width_scale, height_scale)
+
+        self.scale = min(self.scale, 2.0)
+
+        if self.scale < 0.1:
+            self.scale = 0.1
+
+        self.offset_x = (screen_w // 2) - int(center_x
+                                              * self.norm_val * self.scale)
+        self.offset_y = (screen_h // 2) - int(center_y
+                                              * self.norm_val * self.scale)
 
     def run(self) -> None:
         mousedown = False
@@ -176,7 +216,7 @@ class Visualizer():
                     self.running = False
                 if event.type == pygame.MOUSEWHEEL:
                     scale_factor: int = event.y * 0.1
-                    if 0.1 < self.scale + scale_factor < 3.0:
+                    if 0.1 < self.scale + scale_factor < 2.0:
                         self.scale += scale_factor
                 if event.type == pygame.MOUSEBUTTONDOWN:
                     mousedown = True
@@ -187,8 +227,10 @@ class Visualizer():
                     self.offset_y += event.rel[1]
                 if event.type == self.NEXT_TURN_EVENT:
                     self.turn += 1
+                if event.type == pygame.VIDEORESIZE:
+                    self._center_and_fit_map()
 
-            self.screen.fill("gray")
+            self.screen.fill("#211e69")
 
             for vconnection in self.vconnections:
                 x1, y1 = self.\
