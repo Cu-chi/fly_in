@@ -1,6 +1,25 @@
 from fly_in.map_types import Node, Metadata, Zone, Connection, Map
 from typing import Any
 from types import TracebackType
+import glob
+
+
+class MapFolder():
+    def __init__(self, maps_folder: str) -> None:
+        self.maps_folder = maps_folder
+
+    def get_valid_maps(self) -> dict[str, Map]:
+        map_paths = glob.glob(self.maps_folder + "/**/*.txt")
+        map_dict: dict[str, Map] = {}
+
+        for map_path in map_paths:
+            try:
+                with MapParser(map_path) as map:
+                    map_dict.update({map_path: map})
+            except Exception:
+                pass
+
+        return map_dict
 
 
 class MapParsingError(Exception):
