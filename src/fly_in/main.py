@@ -22,6 +22,10 @@ def main() -> None:
     ]
     maps = MapCategorizer("maps/")
     valid_maps: dict[str, dict[str, Map]] = maps.get_valid_maps()
+
+    if len(valid_maps) == 0:
+        print("error: maps folder is empty.")
+        return
     vmenu = VMenu(valid_maps)
     vmenu.run()
     return
