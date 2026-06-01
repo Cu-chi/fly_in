@@ -4,7 +4,7 @@ from fly_in.map_parser import Map
 from fly_in.map_types import Node, Connection
 from typing import Any
 from fly_in.output import Output
-from fly_in.simulation import PathFinder
+from fly_in.simulation import PathFinder, PathError
 from enum import Enum, auto
 import math
 
@@ -296,6 +296,7 @@ class Visualizer():
     def __init__(self, screen: pygame.Surface, map: Map,
                  drones_positions: list[dict[int, Node | Connection]]) -> None:
         pygame.display.set_caption("Fly-in - Visualization")
+        self.font_title = pygame.font.SysFont("Segoe UI", 48, bold=True)
         self.font = pygame.font.SysFont("Segoe UI", 24, bold=True)
         self.font_small = pygame.font.SysFont("Segoe UI", 16)
         self.screen = screen
@@ -324,6 +325,8 @@ class Visualizer():
         self.offset_y = 0
         self._center_and_fit_map()
         self.mousedown = False
+        self.nb_drones = map.nb_drones
+        self.end = map.end_hub
 
         for hub in map.hubs:
             x, y = self._normalize_pos(hub)
@@ -398,6 +401,14 @@ class Visualizer():
                     return VExitState.SHOW_MENU
                 if event.key == pygame.K_SPACE:
                     self.paused = not self.paused
+                if event.key == pygame.K_LEFT:
+                    if self.turn > 0:
+                        self.turn -= 1
+                        self.cur_turn = self.turn
+                if event.key == pygame.K_RIGHT:
+                    if self.turn < self.max_turn:
+                        self.turn += 1
+                        self.cur_turn = self.turn
             if event.type == pygame.MOUSEWHEEL:
                 scale_factor: int = event.y * 0.1
                 if 0.1 < self.scale + scale_factor < 2.0:
@@ -451,5 +462,42 @@ class Visualizer():
         if not self.paused:
             self.cur_turn += self.anim_speed
             self.cur_turn = min(self.turn, self.cur_turn)
+
+        bg_surf = pygame.Surface((400, 230), pygame.SRCALPHA)
+        bg_surf.fill((0, 0, 0, 100))
+        self.screen.blit(bg_surf, (0, 0))
+
+        title = self.font_title.render("Simulation", True, (255, 255, 255))
+        turn = self.font_small.render(f"Turn: {self.turn}/{self.max_turn}",
+                                      True, (255, 255, 255))
+        arrived = self.font_small.render(
+            f"Drones arrived: {
+                len([1 for d in self.vdrones if d.pos == self.end])
+            }/{self.nb_drones}",
+            True, (255, 255, 255))
+        state_title = self.font_small.render("State:", True, (255, 255, 255))
+        if self.paused:
+            state = self.font_small.render("PAUSED", True, (255, 120, 120))
+        elif self.cur_turn < self.max_turn:
+            state = self.font_small.render("RUNNING", True, (255, 255, 40))
+        else:
+            state = self.font_small.render("ENDED", True, (120, 255, 120))
+        self.screen.blit(turn, (10, 80))
+        self.screen.blit(state_title, (10, 100))
+        self.screen.blit(state, (55, 100))
+        self.screen.blit(arrived, (10, 120))
+
+        desc = [
+            "SPACE: pause",
+            "ESC: back to main menu",
+            "LEFT/RIGHT ARROW: increase/decrease turn"
+        ]
+        desc_y: int = 140
+        for desc_str in desc:
+            desc_y += 20
+            desc_surf = self.font_small.render(desc_str, True, (150, 255, 255))
+            self.screen.blit(desc_surf, (10, desc_y))
+
+        self.screen.blit(title, (60, 20))
 
         return VExitState.CONTINUE
