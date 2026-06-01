@@ -6,6 +6,7 @@ from typing import Any
 from fly_in.output import Output
 from fly_in.simulation import PathFinder
 from enum import Enum, auto
+import math
 
 
 class VNode(pygame.sprite.Sprite):
@@ -97,7 +98,7 @@ class VDrone(pygame.sprite.Sprite):
                                                      (96, 96))
         self.image = self.original_image.copy()
         self.rect = self.image.get_rect(center=(screen_x, screen_y))
-        self.position = position
+        self.pos = position
         self.last_scale = 1.0
 
     def draw(self, screen: pygame.Surface) -> None:
@@ -275,6 +276,11 @@ class Visualizer():
         self.font_small = pygame.font.SysFont("Segoe UI", 16)
         self.screen = screen
 
+        self.cur_turn = 0.0
+        self.anim_speed = 0.05
+        self.max_turn = len(drones_positions)
+        self.paused = False
+
         self.set_data(map, drones_positions)
         self.running = True
 
@@ -309,13 +315,20 @@ class Visualizer():
         ]
 
         self.NEXT_TURN_EVENT = pygame.USEREVENT + 1
-        pygame.time.set_timer(self.NEXT_TURN_EVENT,
-                              500,
-                              len(self.drones_positions) - 1)
+        pygame.time.set_timer(self.NEXT_TURN_EVENT, 1000)
 
     def _normalize_pos(self, node: Node) -> tuple[int, int]:
         return (int((node.x) * self.norm_val * self.scale) + self.offset_x,
                 int((node.y) * self.norm_val * self.scale) + self.offset_y)
+
+    def _normalize_any(self,
+                       node_or_conn: Node | Connection) -> tuple[int, int]:
+        if isinstance(node_or_conn, Node):
+            return self._normalize_pos(node_or_conn)
+        elif isinstance(node_or_conn, Connection):
+            x1, y1 = self._normalize_pos(node_or_conn.node1)
+            x2, y2 = self._normalize_pos(node_or_conn.node2)
+            return (x1 + x2) // 2, (y1 + y2) // 2
 
     def _center_and_fit_map(self) -> None:
         if not self.hubs:
@@ -359,6 +372,8 @@ class Visualizer():
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_ESCAPE:
                     return VExitState.SHOW_MENU
+                if event.key == pygame.K_SPACE:
+                    self.paused = not self.paused
             if event.type == pygame.MOUSEWHEEL:
                 scale_factor: int = event.y * 0.1
                 if 0.1 < self.scale + scale_factor < 2.0:
@@ -370,10 +385,13 @@ class Visualizer():
             if event.type == pygame.MOUSEMOTION and self.mousedown:
                 self.offset_x += event.rel[0]
                 self.offset_y += event.rel[1]
-            if event.type == self.NEXT_TURN_EVENT:
-                self.turn += 1
+            if event.type == self.NEXT_TURN_EVENT and not self.paused:
+                if self.turn < self.max_turn:
+                    self.turn += 1
             if event.type == pygame.VIDEORESIZE:
                 self._center_and_fit_map()
+
+        progress: float = self.cur_turn - math.floor(self.cur_turn)
 
         self.screen.fill((15, 23, 42))
 
@@ -391,16 +409,23 @@ class Visualizer():
 
         for drone_id, vdrone in enumerate(self.vdrones, start=1):
             positions = self.drones_positions[self.turn]
+            dest_pos: Node | Connection | None = None
             if drone_id in positions:
-                vdrone.position = positions[drone_id]
-            x: int = 0
-            y: int = 0
-            if isinstance(vdrone.position, Node):
-                x, y = self._normalize_pos(vdrone.position)
-            elif isinstance(vdrone.position, Connection):
-                x1, y1 = self._normalize_pos(vdrone.position.node1)
-                x2, y2 = self._normalize_pos(vdrone.position.node2)
-                x, y = (x1 + x2) // 2, (y1 + y2) // 2
+                dest_pos = positions[drone_id]
+                if self.cur_turn >= self.turn:
+                    vdrone.pos = positions[drone_id]
+
+            dest_x, dest_y = 0, 0
+            x, y = self._normalize_any(vdrone.pos)
+            if dest_pos:
+                dest_x, dest_y = self._normalize_any(dest_pos)
+                x, y = x + ((dest_x - x) * progress), \
+                    y + ((dest_y - y) * progress)
             vdrone.update(x, y, self.scale)
             vdrone.draw(self.screen)
+
+        if not self.paused:
+            self.cur_turn += self.anim_speed
+            self.cur_turn = min(self.turn, self.cur_turn)
+
         return VExitState.CONTINUE
