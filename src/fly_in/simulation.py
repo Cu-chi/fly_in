@@ -125,7 +125,7 @@ class PathFinder:
         start_h = self._heuristic(self.map.start_hub)
         open_set: list[tuple[float, int, float, int, Node, Path]] = [
             (start_g + start_h, next(counter), start_g,
-             -1, self.map.start_hub, [])
+             0, self.map.start_hub, [(self.map.start_hub, 0)])
         ]
         visited = set()
 

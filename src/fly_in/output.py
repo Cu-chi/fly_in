@@ -26,17 +26,20 @@ class Output:
         path_found = True
         step = 0
         positions: list[dict[int, Node | Connection]] = []
+        start: Node | Connection = self.__drones_paths[1][0][0]
         while path_found:
             path_found = False
             for drone_id in self.__drones_paths:
-                path: Path = list(filter(lambda p: p[1] == step,
+                path: Path = list(filter(lambda p: p[1] == step + 1,
                                          self.__drones_paths[drone_id]))
                 if not path:
+                    continue
+                last_pos: Node | Connection = path[-1][0]
+                if last_pos is start:
                     continue
                 if len(positions) - 1 < step:
                     positions.append({})
                 path_found = True
-                last_pos: Node | Connection = path[-1][0]
                 positions[step][drone_id] = last_pos
             step += 1
         return positions
