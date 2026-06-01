@@ -284,6 +284,9 @@ class Visualizer():
         self.hubs = map.hubs
         self.connections = map.connections
         self.drones_positions = drones_positions
+        self.drones_positions.insert(0, {
+            id: map.start_hub for id in range(1, map.nb_drones + 1)
+        })
         self.norm_val = 240
         self.scale = 1.0
         self.turn = 0
