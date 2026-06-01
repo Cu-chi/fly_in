@@ -258,6 +258,10 @@ class VMenu(pygame.sprite.Sprite):
                     path_finder.route_all_drones()
                     output = Output(path_finder.drones_paths)
                     drones_positions = output.generate_list_of_positions()
+                    output_title = f"=== {self.selected_map_name} ==="
+                    print(output_title)
+                    output.from_positions_print_turns(drones_positions)
+                    print("=" * len(output_title))
 
                     visualizer = Visualizer(self.screen,
                                             self.selected_map_data,
