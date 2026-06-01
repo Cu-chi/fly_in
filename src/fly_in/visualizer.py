@@ -137,6 +137,8 @@ class VMenu(pygame.sprite.Sprite):
         self.selected_map_name: str | None = None
         self.selected_map_data: Map | None = None
 
+        self.show_err = ""
+
         super().__init__(*groups)
 
     def _draw_button(self, text: str, rect: pygame.Rect,
@@ -236,22 +238,40 @@ class VMenu(pygame.sprite.Sprite):
                     self._draw_button("START SIMULATION", start_rect, hover,
                                       False, is_action=True)
 
+                if self.show_err:
+                    err = self.font_title.render(f"Error: {self.show_err}",
+                                                 True, (255, 80, 80))
+                    screen_rect = self.screen.get_rect()
+                    err_rect = err.get_rect(center=(screen_rect.centerx, 100))
+                    self.screen.blit(err, err_rect)
+
                 pygame.display.flip()
                 self.clock.tick(60)
 
+            self.show_err = ""
             if not self.show_visu:
                 break
 
             if self.selected_map_data:
-                path_finder = PathFinder(self.selected_map_data)
-                path_finder.route_all_drones()
+                try:
+                    path_finder = PathFinder(self.selected_map_data)
+                    path_finder.route_all_drones()
+                    output = Output(path_finder.drones_paths)
+                    drones_positions = output.generate_list_of_positions()
 
-                output = Output(path_finder.drones_paths)
-                drones_positions = output.generate_list_of_positions()
-
-                visualizer = Visualizer(self.screen,
-                                        self.selected_map_data,
-                                        drones_positions)
+                    visualizer = Visualizer(self.screen,
+                                            self.selected_map_data,
+                                            drones_positions)
+                except PathError as e:
+                    self.show_err = str(e)
+                    print(f"error: {e}")
+                    self.show_visu = False
+                    self.show_menu = True
+                except Exception as e:
+                    self.show_err = str(e)
+                    print(f"error: {e}")
+                    self.show_visu = False
+                    self.show_menu = True
 
                 while self.show_visu:
                     match visualizer.visualization():
