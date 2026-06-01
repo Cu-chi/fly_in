@@ -177,8 +177,9 @@ class VMenu(pygame.sprite.Sprite):
                 for event in pygame.event.get():
                     if event.type == pygame.QUIT:
                         return
-                    if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
-                        mouse_clicked = True
+                    if event.type == pygame.MOUSEBUTTONDOWN:
+                        if event.button == 1:
+                            mouse_clicked = True
                     if event.type == pygame.KEYDOWN:
                         if event.key == pygame.K_ESCAPE:
                             return
