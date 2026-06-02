@@ -64,11 +64,9 @@ class VNode(pygame.sprite.Sprite):
             original_height = self.original_text_surface.get_height()
             new_width = int(original_width * scale)
             new_height = int(original_height * scale)
-            new_size_w = max(1, new_width)
-            new_size_h = max(1, new_height)
             self.last_scale = scale
             self.text_surface = pygame.transform.smoothscale(
-                self.original_text_surface, (new_size_w, new_size_h))
+                self.original_text_surface, (new_width, new_height))
             self.text_rect = self.text_surface.get_rect(center=(x, y))
         self.rect.center = (x, y)
         self.text_rect.centerx = self.rect.centerx
@@ -89,7 +87,8 @@ class VConnection(pygame.sprite.Sprite):
 
 
 class VDrone(pygame.sprite.Sprite):
-    def __init__(self, position: Node | Connection,
+    def __init__(self, position: Node | Connection, id: int,
+                 font: pygame.font.Font,
                  screen_x: int, screen_y: int, *groups: Any):
         super().__init__(*groups)
 
@@ -99,17 +98,35 @@ class VDrone(pygame.sprite.Sprite):
         self.image = self.original_image.copy()
         self.rect = self.image.get_rect(center=(screen_x, screen_y))
         self.pos = position
+        self.id = id
         self.last_scale = 1.0
+        self.original_text_surf = font.render(str(self.id),
+                                              True, (0, 0, 0))
+        self.text_rect = self.original_text_surf.get_rect()
+        self.text_surf = self.original_text_surf.copy()
 
     def draw(self, screen: pygame.Surface) -> None:
         screen.blit(self.image, self.rect)
+        screen.blit(self.text_surf, self.text_rect)
 
     def update(self, x: int, y: int, scale: float) -> None:
         if scale != self.last_scale:
             self.last_scale = scale
             self.image = pygame.transform.scale_by(self.original_image, scale)
             self.rect = self.image.get_rect(center=(x, y))
+
+            original_width = self.original_text_surf.get_width()
+            original_height = self.original_text_surf.get_height()
+            new_width = int(original_width * scale)
+            new_height = int(original_height * scale)
+            self.last_scale = scale
+            self.text_surf = pygame.transform.smoothscale(
+                self.original_text_surf, (new_width, new_height))
+            self.text_rect = self.text_surf.get_rect(
+                center=self.rect.center)
         self.rect.center = (x, y)
+        self.text_rect = self.text_surf.get_rect(
+            center=(x, y))
 
 
 class VExitState(Enum):
@@ -299,6 +316,7 @@ class Visualizer():
         self.font_title = pygame.font.SysFont("Segoe UI", 48, bold=True)
         self.font = pygame.font.SysFont("Segoe UI", 24, bold=True)
         self.font_small = pygame.font.SysFont("Segoe UI", 16)
+        self.font_small_bold = pygame.font.SysFont("Segoe UI", 16, bold=True)
         self.screen = screen
 
         self.cur_turn = 0.0
@@ -337,8 +355,9 @@ class Visualizer():
             for connection in map.connections
         ]
         self.vdrones: list[VDrone] = [
-            VDrone(map.start_hub, *self._normalize_pos(map.start_hub))
-            for _ in range(map.nb_drones)
+            VDrone(map.start_hub, id,
+                   self.font_small_bold, *self._normalize_pos(map.start_hub))
+            for id in range(1, map.nb_drones + 1)
         ]
 
         self.NEXT_TURN_EVENT = pygame.USEREVENT + 1
@@ -417,6 +436,10 @@ class Visualizer():
                         self._update_drone_pos()
                         self.turn += 1
                         self.cur_turn = self.turn
+                if event.key == pygame.K_r:
+                    self.turn = 0
+                    self.cur_turn = 0.0
+                    self.paused = False
             if event.type == pygame.MOUSEWHEEL:
                 scale_factor: int = event.y * 0.1
                 if 0.1 < self.scale + scale_factor < 2.0:
@@ -498,6 +521,7 @@ class Visualizer():
         desc = [
             "SPACE: pause",
             "ESC: back to main menu",
+            "R: restart simulation",
             "LEFT/RIGHT ARROW: increase/decrease turn"
         ]
         desc_y: int = 140
