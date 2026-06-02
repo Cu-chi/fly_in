@@ -392,6 +392,12 @@ class Visualizer():
         self.offset_y = (screen_h // 2) - int(center_y
                                               * self.norm_val * self.scale)
 
+    def _update_drone_pos(self) -> None:
+        for drone_id, vdrone in enumerate(self.vdrones, start=1):
+            positions = self.drones_positions[self.turn]
+            if drone_id in positions:
+                vdrone.pos = positions[drone_id]
+
     def visualization(self) -> VExitState:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -403,10 +409,12 @@ class Visualizer():
                     self.paused = not self.paused
                 if event.key == pygame.K_LEFT:
                     if self.turn > 0:
+                        self._update_drone_pos()
                         self.turn -= 1
                         self.cur_turn = self.turn
                 if event.key == pygame.K_RIGHT:
                     if self.turn < self.max_turn:
+                        self._update_drone_pos()
                         self.turn += 1
                         self.cur_turn = self.turn
             if event.type == pygame.MOUSEWHEEL:
