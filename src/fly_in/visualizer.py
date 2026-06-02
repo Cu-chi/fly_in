@@ -1,3 +1,4 @@
+import sys
 import pygame
 import pygame.gfxdraw
 from fly_in.map_parser import Map
@@ -73,9 +74,8 @@ class VNode(pygame.sprite.Sprite):
         self.text_rect.bottom = self.rect.top
 
 
-class VConnection(pygame.sprite.Sprite):
-    def __init__(self, connection: Connection, *groups: Any):
-        super().__init__(*groups)
+class VConnection():
+    def __init__(self, connection: Connection):
         self.connection = connection
         self.color = pygame.Color(255, 255, 255)
 
@@ -258,7 +258,7 @@ class VMenu(pygame.sprite.Sprite):
                                           hover, False, is_action=True)
 
                 if self.show_err:
-                    err = self.font_title.render(f"Error: {self.show_err}",
+                    err = self.font_title.render(f"[ERROR] {self.show_err}",
                                                  True, (255, 80, 80))
                     screen_rect = self.screen.get_rect()
                     err_rect = err.get_rect(center=(screen_rect.centerx, 100))
@@ -272,6 +272,7 @@ class VMenu(pygame.sprite.Sprite):
                 break
 
             if self.selected_map_data:
+                print(f"Starting simulation for map: {self.selected_map_name}")
                 try:
                     path_finder = PathFinder(self.selected_map_data)
                     path_finder.route_all_drones()
@@ -285,28 +286,23 @@ class VMenu(pygame.sprite.Sprite):
                     visualizer = Visualizer(self.screen,
                                             self.selected_map_data,
                                             drones_positions)
-                except PathError as e:
-                    self.show_err = str(e)
-                    print(f"error: {e}")
-                    self.show_visu = False
-                    self.show_menu = True
-                except Exception as e:
-                    self.show_err = str(e)
-                    print(f"error: {e}")
-                    self.show_visu = False
-                    self.show_menu = True
 
-                while self.show_visu:
-                    match visualizer.visualization():
-                        case VExitState.EXIT_ALL:
-                            self.show_menu = False
-                            self.show_visu = False
-                            app_running = False
-                        case VExitState.SHOW_MENU:
-                            self.show_menu = True
-                            self.show_visu = False
-                    pygame.display.flip()
-                    self.clock.tick(60)
+                    while self.show_visu:
+                        match visualizer.visualization():
+                            case VExitState.EXIT_ALL:
+                                self.show_menu = False
+                                self.show_visu = False
+                                app_running = False
+                            case VExitState.SHOW_MENU:
+                                self.show_menu = True
+                                self.show_visu = False
+                        pygame.display.flip()
+                        self.clock.tick(60)
+                except Exception as e:
+                    self.show_err = f"{e.__class__.__name__}: {e}"
+                    print(self.show_err, file=sys.stderr)
+                    self.show_visu = False
+                    self.show_menu = True
 
         pygame.quit()
 
@@ -496,7 +492,7 @@ class Visualizer():
             self.cur_turn += self.anim_speed
             self.cur_turn = min(self.turn, self.cur_turn)
 
-        bg_surf = pygame.Surface((400, 230), pygame.SRCALPHA)
+        bg_surf = pygame.Surface((400, 250), pygame.SRCALPHA)
         bg_surf.fill((0, 0, 0, 100))
         self.screen.blit(bg_surf, (0, 0))
 
