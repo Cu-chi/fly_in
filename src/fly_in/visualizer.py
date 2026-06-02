@@ -317,7 +317,6 @@ class Visualizer():
         self.font_small_bold = pygame.font.SysFont("Segoe UI", 16, bold=True)
         self.screen = screen
 
-        self.cur_turn = 0.0
         self.anim_speed = 0.05
         self.max_turn = len(drones_positions)
         self.paused = False
@@ -337,6 +336,7 @@ class Visualizer():
         self.norm_val = 240
         self.scale = 1.0
         self.turn = 0
+        self.cur_turn = 0.0
         self.offset_x = 0
         self.offset_y = 0
         self._center_and_fit_map()
