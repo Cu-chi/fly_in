@@ -251,9 +251,11 @@ class VMenu(pygame.sprite.Sprite):
                     if hover and mouse_clicked:
                         self.show_menu = False
                         self.show_visu = True
-
-                    self._draw_button("START SIMULATION", start_rect, hover,
-                                      False, is_action=True)
+                        self._draw_button("LOADING...", start_rect, hover,
+                                          False, is_action=True)
+                    else:
+                        self._draw_button("START SIMULATION", start_rect,
+                                          hover, False, is_action=True)
 
                 if self.show_err:
                     err = self.font_title.render(f"Error: {self.show_err}",
