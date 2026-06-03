@@ -1,6 +1,7 @@
 import pytest
 from pathlib import Path
 from fly_in.map_parser import MapParser, MapParsingError
+from fly_in.map_types import Node
 
 
 def create_map(tmp_path: Path, content: str) -> str:
@@ -41,7 +42,10 @@ connection: roof_1-goal"""
             assert len(parser.hubs) == 3
             assert len(parser.connections) == 2
 
-            roof = parser._get_node_from_name("roof_1")
+            roof: Node | None = None
+            for hub in parser.hubs:
+                if hub.name == "roof_1":
+                    roof = hub
             assert roof is not None
             assert roof.metadata.zone \
                 and roof.metadata.zone.name == "RESTRICTED"
