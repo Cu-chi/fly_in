@@ -2,7 +2,7 @@ from collections import defaultdict
 import heapq
 import itertools
 from fly_in.map_types import Node, Connection, Zone, Map
-from typing import TypeAlias
+from typing import TypeAlias, Any
 
 
 PathStep: TypeAlias = tuple[Node | Connection, int]
@@ -10,7 +10,7 @@ Path: TypeAlias = list[PathStep]
 
 
 class PathError(Exception):
-    def __init__(self, *args):
+    def __init__(self, *args: Any) -> None:
         super().__init__(*args)
 
 

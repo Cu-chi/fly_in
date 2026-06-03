@@ -1,11 +1,10 @@
 import sys
 import pygame
 import pygame.gfxdraw
-from fly_in.map_parser import Map
-from fly_in.map_types import Node, Connection
+from fly_in.map_types import Node, Connection, Map
 from typing import Any
 from fly_in.output import Output
-from fly_in.simulation import PathFinder, PathError
+from fly_in.simulation import PathFinder
 from enum import Enum, auto
 import math
 
@@ -483,8 +482,8 @@ class Visualizer():
             x, y = self._normalize_any(vdrone.pos)
             if dest_pos:
                 dest_x, dest_y = self._normalize_any(dest_pos)
-                x, y = x + ((dest_x - x) * progress), \
-                    y + ((dest_y - y) * progress)
+                x, y = int(x + ((dest_x - x) * progress)), \
+                    int(y + ((dest_y - y) * progress))
             vdrone.update(x, y, self.scale)
             vdrone.draw(self.screen)
 
