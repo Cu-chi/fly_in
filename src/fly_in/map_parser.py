@@ -22,8 +22,8 @@ class MapParser():
     def __enter__(self) -> Map:
         self.file = open(self.filename, "r")
         self._parser()
-        if self.nb_drones and self.start_hub and \
-           self.end_hub and self.hubs and self.connections:
+        if self.nb_drones is not None and self.start_hub is not None and \
+           self.end_hub is not None:
             return Map(self.nb_drones, self.start_hub,
                        self.end_hub, self.hubs, self.connections)
         raise MapParsingError(0, f"error parsing {self.filename}")
