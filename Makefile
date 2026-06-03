@@ -16,7 +16,10 @@ debug:
 	uv run python -m pdb $(MAIN) $(ARGS)
 
 clean:
-	@rm -rf $$(find . -type d -name "__pycache__") $$(find . -type d -name ".mypy_cache")
+	@rm -rf $$(find . -type d -name "__pycache__")
+	@rm -rf $$(find . -type d -name ".mypy_cache")
+	@rm -rf $$(find . -type d -name ".pytest_cache")
+	@echo temporary files and caches deleted
 
 lint:
 	uv run python -m flake8 . --extend-exclude $(VENV)
