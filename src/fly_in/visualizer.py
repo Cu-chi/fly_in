@@ -341,7 +341,10 @@ class Visualizer():
         self._center_and_fit_map()
         self.mousedown = False
         self.nb_drones = map.nb_drones
+        self.hud_w = 570
+        self.hud_h = 400 + 35 * math.ceil(self.nb_drones / 10)
         self.end = map.end_hub
+        self.visible_drone = 0
 
         for hub in map.hubs:
             x, y = self._normalize_pos(hub)
@@ -414,10 +417,31 @@ class Visualizer():
             if drone_id in positions:
                 vdrone.pos = positions[drone_id]
 
+    def _draw_button(self, text: str,
+                     rect: pygame.Rect, is_actived: bool) -> None:
+
+        bg_color: tuple[int, int, int] = (30, 41, 59)
+        text_color: tuple[int, int, int] = (255, 255, 255)
+
+        if is_actived:
+            bg_color = (14, 165, 233)
+            text_color = (255, 255, 255)
+
+        pygame.draw.rect(self.screen, bg_color, rect, border_radius=8)
+
+        txt_surf = self.font_small.render(text, True, text_color)
+        txt_rect = txt_surf.get_rect(center=rect.center)
+        self.screen.blit(txt_surf, txt_rect)
+
     def visualization(self) -> VExitState:
+        mouse_x, mouse_y = pygame.mouse.get_pos()
+        mouse_clicked = False
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 return VExitState.EXIT_ALL
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                if event.button == 1:
+                    mouse_clicked = True
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_ESCAPE:
                     return VExitState.SHOW_MENU
@@ -487,13 +511,14 @@ class Visualizer():
                 x, y = int(x + ((dest_x - x) * progress)), \
                     int(y + ((dest_y - y) * progress))
             vdrone.update(x, y, self.scale)
-            vdrone.draw(self.screen)
+            if self.visible_drone == 0 or self.visible_drone == drone_id:
+                vdrone.draw(self.screen)
 
         if not self.paused:
             self.cur_turn += self.anim_speed
             self.cur_turn = min(self.turn, self.cur_turn)
 
-        bg_surf = pygame.Surface((400, 250), pygame.SRCALPHA)
+        bg_surf = pygame.Surface((self.hud_w, self.hud_h), pygame.SRCALPHA)
         bg_surf.fill((0, 0, 0, 100))
         self.screen.blit(bg_surf, (0, 0))
 
@@ -529,6 +554,26 @@ class Visualizer():
             desc_y += 20
             desc_surf = self.font_small.render(desc_str, True, (150, 255, 255))
             self.screen.blit(desc_surf, (10, desc_y))
+
+        btn_x = 10
+        btn_y = desc_y + 40
+        for drone_id in range(1, self.nb_drones + 1):
+            rect = pygame.Rect(btn_x, btn_y, 50, 30)
+            hover = rect.collidepoint(mouse_x, mouse_y)
+
+            if hover and mouse_clicked and \
+               (self.visible_drone == 0 or self.visible_drone != drone_id):
+                self.visible_drone = drone_id
+            elif hover and mouse_clicked and self.visible_drone == drone_id:
+                self.visible_drone = 0
+
+            self._draw_button(f"D{drone_id}", rect,
+                              self.visible_drone == drone_id)
+            if drone_id % 10 == 0:
+                btn_x = 10
+                btn_y += 40
+            else:
+                btn_x += 55
 
         self.screen.blit(title, (60, 20))
 
