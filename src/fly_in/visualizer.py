@@ -437,6 +437,8 @@ class Visualizer():
                     self.turn = 0
                     self.cur_turn = 0.0
                     self.paused = False
+                if event.key == pygame.K_v:
+                    self._center_and_fit_map()
             if event.type == pygame.MOUSEWHEEL:
                 scale_factor: int = event.y * 0.1
                 if 0.1 < self.scale + scale_factor < 2.0:
@@ -519,6 +521,7 @@ class Visualizer():
             "SPACE: pause",
             "ESC: back to main menu",
             "R: restart simulation",
+            "V: reset cam",
             "LEFT/RIGHT ARROW: increase/decrease turn"
         ]
         desc_y: int = 140
