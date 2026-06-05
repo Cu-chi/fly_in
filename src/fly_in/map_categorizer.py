@@ -1,3 +1,4 @@
+"""Module for categorization of the maps of Fly-in."""
 from fly_in.map_parser import MapParser, MapParsingError
 from fly_in.map_types import Map
 from pathlib import Path
@@ -5,10 +6,22 @@ import glob
 
 
 class MapCategorizer():
+    """A class representing a MapCategorizer."""
+
     def __init__(self, maps_folder: str) -> None:
+        """Initialize a MapCategorizer object.
+
+        Args:
+            maps_folder (str): folder name
+        """
         self.maps_folder = maps_folder
 
     def get_valid_maps(self) -> dict[str, dict[str, Map]]:
+        """Get all valid maps in the maps_folder folder.
+
+        Returns:
+            dict[str, dict[str, Map]]: structured dict with each Map associed
+        """
         map_paths = glob.glob(self.maps_folder + "/**/*.txt")
         map_dict: dict[str, dict[str, Map]] = {}
 

@@ -1,3 +1,4 @@
+"""Module for visualization of Fly-in."""
 import sys
 import pygame
 import pygame.gfxdraw
@@ -10,9 +11,19 @@ import math
 
 
 class VNode(pygame.sprite.Sprite):
+    """A class representing a VNode."""
+
     def __init__(self, node: Node,
                  screen_x: int, screen_y: int,
                  font: pygame.font.Font, *groups: Any):
+        """Initialize a VNode objects.
+
+        Args:
+            node (Node): node data
+            screen_x (int): default x pos
+            screen_y (int): default y pos
+            font (pygame.font.Font): font to use
+        """
         super().__init__(*groups)
 
         self.node = node
@@ -47,10 +58,22 @@ class VNode(pygame.sprite.Sprite):
         self.last_scale = 1.0
 
     def draw(self, screen: pygame.Surface) -> None:
+        """Draw the node to the screen.
+
+        Args:
+            screen (pygame.Surface): screen to draw
+        """
         screen.blit(self.image, self.rect)
         screen.blit(self.text_surface, self.text_rect)
 
     def update(self, x: int, y: int, scale: float) -> None:
+        """Update the Node.
+
+        Args:
+            x (int): x pos
+            y (int): y pos
+            scale (float): scale of the view
+        """
         if scale != self.last_scale:
             original_size = self.original_image.get_width()
             new_size = int(original_size * scale)
@@ -74,21 +97,45 @@ class VNode(pygame.sprite.Sprite):
 
 
 class VConnection():
+    """A class representing a VConnection."""
+
     def __init__(self, connection: Connection):
+        """Initialize a VConnection object."""
         self.connection = connection
         self.color = pygame.Color(255, 255, 255)
 
     def draw(self, surface: pygame.Surface, x1: int, y1: int,
              x2: int, y2: int, scale: float) -> None:
+        """Draw the connection to the screen.
+
+        Args:
+            surface (pygame.Surface): screen to draw
+            x1 (int): base x pos
+            y1 (int): base y pos
+            x2 (int): dest x pos
+            y2 (int): dest y pos
+            scale (float): scale of the view
+        """
         new_width: int = max(1, int(10 * scale))
         pygame.draw.line(surface, self.color,
                          (x1, y1), (x2, y2), new_width)
 
 
 class VDrone(pygame.sprite.Sprite):
+    """A class representing VDrone object."""
+
     def __init__(self, position: Node | Connection, id: int,
                  font: pygame.font.Font,
                  screen_x: int, screen_y: int, *groups: Any):
+        """Initialize a VDrone object.
+
+        Args:
+            position (Node | Connection): base position
+            id (int): id of the drone
+            font (pygame.font.Font): font used
+            screen_x (int): base x pos
+            screen_y (int): base y pos
+        """
         super().__init__(*groups)
 
         self.original_image = pygame.image.load("src/fly_in/assets/drone.png")
@@ -105,10 +152,22 @@ class VDrone(pygame.sprite.Sprite):
         self.text_surf = self.original_text_surf.copy()
 
     def draw(self, screen: pygame.Surface) -> None:
+        """Draw the drone to the screen.
+
+        Args:
+            screen (pygame.Surface): screen to draw the drone
+        """
         screen.blit(self.image, self.rect)
         screen.blit(self.text_surf, self.text_rect)
 
     def update(self, x: int, y: int, scale: float) -> None:
+        """Update drone position.
+
+        Args:
+            x (int): x pos
+            y (int): y pos
+            scale (float): view scale
+        """
         if scale != self.last_scale:
             self.last_scale = scale
             self.image = pygame.transform.scale_by(self.original_image, scale)
@@ -129,13 +188,22 @@ class VDrone(pygame.sprite.Sprite):
 
 
 class VExitState(Enum):
+    """Enum for possible ExitState of Visualization."""
+
     EXIT_ALL = auto()
     SHOW_MENU = auto()
     CONTINUE = auto()
 
 
 class VMenu(pygame.sprite.Sprite):
+    """A class representing a VMenu object."""
+
     def __init__(self, maps: dict[str, dict[str, Map]], *groups: Any):
+        """Initiliaze a VMenu instance.
+
+        Args:
+            maps (dict[str, dict[str, Map]]): list of all maps
+        """
         pygame.init()
         self.screen = pygame.display.set_mode((0, 0), pygame.RESIZABLE)
 
@@ -183,6 +251,7 @@ class VMenu(pygame.sprite.Sprite):
         return is_hover
 
     def run(self) -> None:
+        """Run the main loop of the menu."""
         app_running = True
 
         while app_running:
@@ -307,8 +376,18 @@ class VMenu(pygame.sprite.Sprite):
 
 
 class Visualizer():
+    """A class reprensting the visualization."""
+
     def __init__(self, screen: pygame.Surface, map: Map,
                  drones_positions: list[dict[int, Node | Connection]]) -> None:
+        """Initialize a Visualizer object.
+
+        Args:
+            screen (pygame.Surface): the screen to display the visualization
+            map (Map): Map Object
+            drones_positions (list[dict[int, Node  |  Connection]]): positions
+            list of drones for each turn
+        """
         pygame.display.set_caption("Fly-in - Visualization")
         self.font_title = pygame.font.SysFont("Segoe UI", 48, bold=True)
         self.font = pygame.font.SysFont("Segoe UI", 24, bold=True)
@@ -325,6 +404,13 @@ class Visualizer():
 
     def set_data(self, map: Map,
                  drones_positions: list[dict[int, Node | Connection]]) -> None:
+        """Set the data of the map for the visualization.
+
+        Args:
+            map (Map): Map Object
+            drones_positions (list[dict[int, Node  |  Connection]]): positions
+            list of drones for each turn
+        """
         self.vnodes: dict[str, VNode] = {}
         self.hubs = map.hubs
         self.connections = map.connections
@@ -434,6 +520,11 @@ class Visualizer():
         self.screen.blit(txt_surf, txt_rect)
 
     def visualization(self) -> VExitState:
+        """Visualization loop. Draws the logic of all the simulation.
+
+        Returns:
+            VExitState: How the visualization has been exited
+        """
         mouse_x, mouse_y = pygame.mouse.get_pos()
         mouse_clicked = False
         for event in pygame.event.get():

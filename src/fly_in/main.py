@@ -1,3 +1,4 @@
+"""Main module of Fly-in."""
 from fly_in.map_parser import MapParsingError
 from fly_in.map_categorizer import MapCategorizer
 from fly_in.map_types import Map
@@ -5,6 +6,7 @@ from fly_in.visualizer import VMenu
 
 
 def main() -> None:
+    """Start main of Fly-in."""
     maps = MapCategorizer("maps/")
     valid_maps: dict[str, dict[str, Map]] = maps.get_valid_maps()
 

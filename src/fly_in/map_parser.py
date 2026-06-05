@@ -1,3 +1,4 @@
+"""Module the parser of Fly-in."""
 from fly_in.map_types import Node, Metadata, Zone, Connection, Map
 from typing import Any
 from types import TracebackType
@@ -5,14 +6,29 @@ import sys
 
 
 class MapParsingError(Exception):
+    """A class representing a MapParsingError exception."""
+
     def __init__(self, line: int, error: str, *args: Any) -> None:
+        """Initialize a MapParsingError exception.
+
+        Args:
+            line (int): line number
+            error (str): error message
+        """
         self.line = line
         self.error = error
         super().__init__(*args)
 
 
 class MapLimitError(MapParsingError):
+    """A class representing a MapLimitError exception."""
+
     def __init__(self, line: int, *args: Any) -> None:
+        """Initialize a MapLimitError exception.
+
+        Args:
+            line (int): line number
+        """
         super().__init__(line, "WARNING: Value exceeds operational limit."
                          " Visualization integrity cannot be guaranteed. "
                          "Use 'make run-bypass-limits' to override this"
@@ -20,7 +36,14 @@ class MapLimitError(MapParsingError):
 
 
 class MapParser():
+    """A class representing a MapParser."""
+
     def __init__(self, filename: str) -> None:
+        """Initialize a MapParser.
+
+        Args:
+            filename (str): file to parse
+        """
         self.filename = filename
         self.nb_drones: int | None = None
         self.start_hub: Node | None = None
@@ -30,6 +53,14 @@ class MapParser():
         self.bypass_limits = "--bypass-limits" in sys.argv
 
     def __enter__(self) -> Map:
+        """With block enter.
+
+        Raises:
+            MapParsingError: Error in parsing
+
+        Returns:
+            Map: Map Object
+        """
         self.file = open(self.filename, "r")
         self._parser()
         if self.nb_drones is not None and self.start_hub is not None and \
@@ -40,15 +71,18 @@ class MapParser():
 
     @staticmethod
     def _extract_metadata_str(id: int, line: str) -> tuple[str, str]:
-        """Extract metadata from the line and return
-        line without metadata and metadata without brackets
+        """Extract metadata from the line.
 
         Args:
-            line (str): the line
+            id (int): line number
+            line (str): line str
+
+        Raises:
+            MapParsingError: if metadata is not last arg
 
         Returns:
-            tuple[str, str]: first is the line without metadata,
-            second is only the metadata without brackets
+            tuple[str, str]: first is the line without metadata, second is
+            only the metadata without brackets
         """
         opening = line.find("[")
         if opening == -1:
@@ -197,6 +231,19 @@ class MapParser():
 
     def validate_nb_drones(self, id: int,
                            node_params: list[str], metadata_str: str) -> None:
+        """Validate the nb_drones key.
+
+        Args:
+            id (int): line number
+            node_params (list[str]): parameters
+            metadata_str (str): metadatas
+
+        Raises:
+            MapParsingError: not 1 arg
+            MapLimitError: value exceeds limits
+            MapParsingError: nb_drones is not a positive int
+            MapParsingError: nb_drones already set
+        """
         if len(node_params) != 1 or metadata_str:
             raise MapParsingError(id, "nb_drones must have only"
                                   " ONE argument without metadata")
@@ -217,6 +264,24 @@ class MapParser():
 
     def validate_hub(self, id: int, hub_type: str,
                      node_params: list[str], metadata_str: str) -> None:
+        """Validate the node string.
+
+        Args:
+            id (int): line number
+            hub_type (str): hub type (start_hub, end_hub or hub)
+            node_params (list[str]): parameters
+            metadata_str (str): metadatas
+
+        Raises:
+            MapParsingError: doesn't have 3 args
+            MapParsingError: already set
+            MapLimitError: value exceeds limits
+            MapParsingError: x or y not integer
+            MapParsingError: forbidden char in name
+            MapParsingError: name not printable
+            MapParsingError: name taken
+            MapParsingError: coords taken
+        """
         if len(node_params) != 3:
             raise MapParsingError(id, f"{hub_type} must have 3 arguments: "
                                   f"'{hub_type}: <name> <x> <y>'")
@@ -258,6 +323,21 @@ class MapParser():
 
     def validate_connection(self, id: int,
                             node_params: list[str], metadata_str: str) -> None:
+        """Validate the connection string.
+
+        Args:
+            id (int): line number
+            node_params (list[str]): parameters
+            metadata_str (str): metadatas
+
+        Raises:
+            MapParsingError: more than one arg
+            MapParsingError: wrong format
+            MapParsingError: same node
+            MapParsingError: node1 not in hubs
+            MapParsingError: node2 not in hubs
+            MapParsingError: connection doesn't exist
+        """
         if len(node_params) != 1:
             raise MapParsingError(id, "connection must have only"
                                   " ONE argument without metadata")
@@ -291,4 +371,11 @@ class MapParser():
                  exc_type: type[BaseException] | None,
                  exc: BaseException | None,
                  tb: TracebackType | None) -> None:
+        """Exit of the with block properly.
+
+        Args:
+            exc_type (type[BaseException] | None): exception type
+            exc (BaseException | None): exception
+            tb (TracebackType | None): traceback
+        """
         self.file.close()

@@ -1,3 +1,4 @@
+"""Module for simulation, path-finding of Fly-in."""
 from collections import defaultdict
 import heapq
 import itertools
@@ -10,12 +11,24 @@ Path: TypeAlias = list[PathStep]
 
 
 class PathError(Exception):
+    """Class for PathError."""
+
     def __init__(self, *args: Any) -> None:
+        """Initialize a PathError exception."""
         super().__init__(*args)
 
 
 class SimulationState:
+    """A class representing a SimulationState."""
+
     def __init__(self, start_hub: Node, end_hub: Node, nb_drones: int) -> None:
+        """Initialize a SimulationState object.
+
+        Args:
+            start_hub (Node): start hub
+            end_hub (Node): end hub
+            nb_drones (int): number of drones
+        """
         self.start_hub = start_hub
         self.end_hub = end_hub
         self.nb_drones = nb_drones
@@ -29,6 +42,15 @@ class SimulationState:
             range(1, nb_drones + 1))
 
     def can_enter_node(self, node: Node, time: int) -> bool:
+        """Check if the node can be used at a given turn.
+
+        Args:
+            node (Node): node to check
+            time (int): time (turn)
+
+        Returns:
+            bool: True if usable, False is not
+        """
         if node == self.end_hub or node == self.start_hub:
             return True
         capacity: int = node.metadata.max_drones \
@@ -39,6 +61,15 @@ class SimulationState:
         return nb_drones_in < capacity
 
     def can_use_connection(self, connection: Connection, time: int) -> bool:
+        """Check if the connection can be used at a given turn.
+
+        Args:
+            connection (Connection): connection to check
+            time (int): time (turn)
+
+        Returns:
+            bool: True if usable, False is not
+        """
         capacity: int = connection.metadata.max_link_capacity \
             if connection.metadata.max_link_capacity else 1
         nb_drones_on: int = len(self.conn_reservations
@@ -46,15 +77,39 @@ class SimulationState:
         return nb_drones_on < capacity
 
     def reserve_node(self, node: Node, time: int, drone_id: int) -> None:
+        """Reserve a node at a given turn for a given drone id.
+
+        Args:
+            node (Node): node to reserve
+            time (int): time (turn)
+            drone_id (int): drone id
+        """
         self.node_reservations[time][node].append(drone_id)
 
     def reserve_connection(self, connection: Connection,
                            time: int, drone_id: int) -> None:
+        """Reserve a connection at a given turn for a given drone id.
+
+        Args:
+            connection (Connection): connection to reserve
+            time (int): time (turn)
+            drone_id (int): drone id
+        """
         self.conn_reservations[time][connection].append(drone_id)
 
 
 class PathFinder:
+    """A class representing a PathFinder."""
+
     def __init__(self, map_data: Map) -> None:
+        """Initialize a PathFinder object.
+
+        Args:
+            map_data (Map): Map object
+
+        Raises:
+            PathError: In case of not solvable map
+        """
         self.map = map_data
         self.state = SimulationState(map_data.start_hub, map_data.end_hub,
                                      map_data.nb_drones)
@@ -64,6 +119,7 @@ class PathFinder:
             raise PathError("map is not solvable")
 
     def route_all_drones(self) -> None:
+        """Find a path for all drones using the find_path method."""
         for drone_id in range(1, self.map.nb_drones + 1):
             path = self.find_path()
             if path:
@@ -119,6 +175,11 @@ class PathFinder:
         return self.true_dist[node]
 
     def find_path(self) -> Path:
+        """Find a path based on current reservations from SimulationState.
+
+        Returns:
+            Path: path from start to end
+        """
         counter: itertools.count[int] = itertools.count()
 
         start_g = 0.0

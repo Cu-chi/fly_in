@@ -1,17 +1,36 @@
+"""Module for output of Fly-in."""
 from fly_in.simulation import Path
 from fly_in.map_types import Connection, Node
 
 
 class Output:
+    """A class representing an Output object."""
+
     def __init__(self, drones_paths: dict[int, Path]) -> None:
+        """Initialize an Output object.
+
+        Args:
+            drones_paths (dict[int, Path]): the drones paths
+        """
         self.set_drones_paths(drones_paths)
 
     def set_drones_paths(self, drones_paths: dict[int, Path]) -> None:
+        """Set the drones paths.
+
+        Args:
+            drones_paths (dict[int, Path]): the drones paths
+        """
         self.__drones_paths = drones_paths
 
     def from_positions_print_turns(self,
                                    positions: list[
                                        dict[int, Node | Connection]]) -> None:
+        """Use list of positions to print turns.
+
+        Args:
+            positions (list[ dict[int, Node  |  Connection]]): the list of
+            positions
+        """
         for step_data in positions:
             turn: str = ""
             for drone_id, last_pos in step_data.items():
@@ -23,6 +42,11 @@ class Output:
             print(turn.strip())
 
     def generate_list_of_positions(self) -> list[dict[int, Node | Connection]]:
+        """Generate a list of positions for each turn and for each drones.
+
+        Returns:
+            list[dict[int, Node | Connection]]: the list of positions
+        """
         path_found = True
         step = 0
         positions: list[dict[int, Node | Connection]] = []
