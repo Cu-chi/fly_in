@@ -3,6 +3,7 @@ from fly_in.map_parser import MapParser, MapParsingError
 from fly_in.map_types import Map
 from pathlib import Path
 import glob
+import sys
 
 
 class MapCategorizer():
@@ -36,5 +37,5 @@ class MapCategorizer():
                         cat_dict = map_dict[path.parent.name]
                     cat_dict.update({path.stem: map})
             except MapParsingError as e:
-                print(f"line {e.line}: {e.error}")
+                print(f"line {e.line}: {e.error}", file=sys.stderr)
         return map_dict

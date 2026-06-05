@@ -4,6 +4,7 @@ import heapq
 import itertools
 from fly_in.map_types import Node, Connection, Zone, Map
 from typing import TypeAlias, Any
+import sys
 
 
 PathStep: TypeAlias = tuple[Node | Connection, int]
@@ -128,7 +129,7 @@ class PathFinder:
                     drone_id: path
                 })
             else:
-                print("no path for ", drone_id)
+                print("no path for ", drone_id, file=sys.stderr)
 
     def _compute_true_distances(self) -> dict[Node, int]:
         distances: dict[Node, int] = {node: -1
