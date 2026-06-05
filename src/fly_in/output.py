@@ -19,7 +19,7 @@ class Output:
                 if isinstance(last_pos, Node):
                     turn += last_pos.name
                 elif isinstance(last_pos, Connection):
-                    turn += f"{last_pos.node1.name}"f"-{last_pos.node2.name}"
+                    turn += f"{last_pos.node1.name}-{last_pos.node2.name}"
             print(turn.strip())
 
     def generate_list_of_positions(self) -> list[dict[int, Node | Connection]]:
