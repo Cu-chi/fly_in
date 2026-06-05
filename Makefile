@@ -22,6 +22,7 @@ clean:
 	@rm -rf $$(find . -type d -name "__pycache__")
 	@rm -rf $$(find . -type d -name ".mypy_cache")
 	@rm -rf $$(find . -type d -name ".pytest_cache")
+	@rm -rf $$(find . -type d -name ".ruff_cache")
 	@echo temporary files and caches deleted
 
 lint:
