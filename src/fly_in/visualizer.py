@@ -527,7 +527,7 @@ class Visualizer():
                                       True, (255, 255, 255))
         arrived = self.font_small.render(
             f"Drones arrived: {
-                len([1 for d in self.vdrones if d.pos == self.end])
+                sum(1 for d in self.vdrones if d.pos == self.end)
             }/{self.nb_drones}",
             True, (255, 255, 255))
         state_title = self.font_small.render("State:", True, (255, 255, 255))
