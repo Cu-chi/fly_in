@@ -27,8 +27,7 @@ class MapParser():
         self.end_hub: Node | None = None
         self.hubs: list[Node] = []
         self.connections: set[Connection] = set()
-        self.bypass_limits = len(sys.argv) > 1 and \
-            sys.argv[1] == "--bypass-limits"
+        self.bypass_limits = "--bypass-limits" in sys.argv
 
     def __enter__(self) -> Map:
         self.file = open(self.filename, "r")
