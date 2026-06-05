@@ -1,13 +1,22 @@
 from fly_in.map_types import Node, Metadata, Zone, Connection, Map
 from typing import Any
 from types import TracebackType
+import sys
 
 
 class MapParsingError(Exception):
-    def __init__(self, line: int, error: str, *args: Any):
+    def __init__(self, line: int, error: str, *args: Any) -> None:
         self.line = line
         self.error = error
         super().__init__(*args)
+
+
+class MapLimitError(MapParsingError):
+    def __init__(self, line: int, *args: Any) -> None:
+        super().__init__(line, "WARNING: Value exceeds operational limit."
+                         " Visualization integrity cannot be guaranteed. "
+                         "Use 'make run-bypass-limits' to override this"
+                         " restriction", *args)
 
 
 class MapParser():
@@ -18,6 +27,8 @@ class MapParser():
         self.end_hub: Node | None = None
         self.hubs: list[Node] = []
         self.connections: set[Connection] = set()
+        self.bypass_limits = len(sys.argv) > 1 and \
+            sys.argv[1] == "--bypass-limits"
 
     def __enter__(self) -> Map:
         self.file = open(self.filename, "r")
@@ -171,7 +182,7 @@ class MapParser():
                     raise MapParsingError(id, f"key '{unknown_key}' is not"
                                           "supported")
             if first_line and node_type != "nb_drones":
-                raise MapParsingError(id, " first line must define the "
+                raise MapParsingError(id, "first line must define the "
                                       "number of drones using "
                                       "'nb_drones: <positive_integer>'")
             first_line = False
@@ -195,6 +206,10 @@ class MapParser():
                 self.nb_drones = int(node_params[0])
                 if self.nb_drones <= 0:
                     raise Exception
+                if self.nb_drones > 200 and not self.bypass_limits:
+                    raise MapLimitError(id)
+            except MapLimitError:
+                raise MapLimitError(id)
             except Exception:
                 raise MapParsingError(id, "nb_drones must be "
                                       "a positive integer")
@@ -213,6 +228,9 @@ class MapParser():
             name: str = node_params[0]
             x: int = int(node_params[1])
             y: int = int(node_params[2])
+            if (x < -100 or x > 100 or y < -100 or y > 100) \
+               and not self.bypass_limits:
+                raise MapLimitError(id)
         except ValueError:
             raise MapParsingError(id, "x and y must be integers")
         if "-" in name:

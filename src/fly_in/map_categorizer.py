@@ -13,7 +13,7 @@ class MapCategorizer():
         map_dict: dict[str, dict[str, Map]] = {}
 
         for map_path in map_paths:
-            print(f"Loading map: {map_path}")
+            print(f"\nLoading map: {map_path}")
             try:
                 with MapParser(map_path) as map:
                     path = Path(map_path)

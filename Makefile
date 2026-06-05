@@ -7,13 +7,16 @@ install:
 	uv sync
 
 run:
-	uv run python $(MAIN) $(ARGS)
+	uv run python $(MAIN)
+
+run-bypass-limits:
+	uv run python $(MAIN) --bypass-limits
 
 test:
 	uv run python -m pytest -v
 
 debug:
-	uv run python -m pdb $(MAIN) $(ARGS)
+	uv run python -m pdb $(MAIN)
 
 clean:
 	@rm -rf $$(find . -type d -name "__pycache__")
@@ -29,4 +32,4 @@ lint-strict:
 	uv run python -m flake8 . --extend-exclude $(VENV)
 	uv run python -m mypy . --strict
 
-.PHONY: install run debug clean lint lint-strict test
+.PHONY: install run debug clean lint lint-strict test run-bypass-limits
